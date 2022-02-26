@@ -3,13 +3,13 @@ package test_speed
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/goforbroke1006/speedtest-lib/upgrader"
+	"github.com/goforbroke1006/speedtest-lib/domain"
 	"net/http"
 
 	"github.com/goforbroke1006/speedtest-lib/pkg/content_len"
 )
 
-func TestSpeedHandler(sources map[string]upgrader.Upgrader) func(w http.ResponseWriter, req *http.Request) {
+func HandlerMiddleware(sources map[string]domain.Upgrader) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		rv := requestValidator{}
 		if errs := rv.Validate(req); len(errs) > 0 {

@@ -1,4 +1,4 @@
-package loader
+package domain
 
 type NetworkLoader interface {
 	LoadConfig() error

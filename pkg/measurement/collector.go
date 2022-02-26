@@ -1,10 +1,10 @@
-package loader
+package measurement
 
 import "math"
 
-type measurementData []float64
+type MetricsCollector []float64
 
-func (m measurementData) avg() float64 {
+func (m MetricsCollector) Avg() float64 {
 	if len(m) == 0 {
 		return 0.0
 	}
@@ -15,7 +15,7 @@ func (m measurementData) avg() float64 {
 	return sum / float64(len(m))
 }
 
-func (m measurementData) max() float64 {
+func (m MetricsCollector) Max() float64 {
 	if len(m) == 0 {
 		return 0.0
 	}

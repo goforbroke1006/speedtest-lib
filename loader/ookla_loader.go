@@ -2,10 +2,12 @@ package loader
 
 import (
 	"fmt"
+	"github.com/goforbroke1006/speedtest-lib/pkg/measurement"
 	"math/rand"
 	"sync"
 	"time"
 
+	"github.com/goforbroke1006/speedtest-lib/domain"
 	"github.com/goforbroke1006/speedtest-lib/external/ookla"
 )
 
@@ -13,22 +15,15 @@ func NewOoklaLoader() *ooklaLoader {
 	client := ookla.NewOoklaSpeedTestClient()
 
 	return &ooklaLoader{
-		client:     client,
-		servers:    nil,
-		licenseKey: "",
-		//payloadSizes: []int{
-		//	1 * 1024 * 1024,  // 1 mega bytes
-		//	2 * 1024 * 1024,  // 2 mega bytes
-		//	5 * 1024 * 1024,  // 5 mega bytes
-		//	10 * 1024 * 1024, // 10 mega bytes
-		//	25 * 1024 * 1024, // 25 mega bytes
-		//},
+		client:      client,
+		servers:     nil,
+		licenseKey:  "",
 		payloadSize: 25 * 1024 * 1024, // 25 mega bytes
 	}
 }
 
 var (
-	_ NetworkLoader = &ooklaLoader{}
+	_ domain.NetworkLoader = &ooklaLoader{}
 )
 
 type ooklaLoader struct {
@@ -37,8 +32,7 @@ type ooklaLoader struct {
 		host      string
 		uploadUrl string
 	}
-	licenseKey string
-	//payloadSizes []int
+	licenseKey  string
 	payloadSize uint
 
 	downloadThreadTotal   uint
@@ -82,7 +76,7 @@ func (o *ooklaLoader) LoadConfig() error {
 
 func (o ooklaLoader) DownloadSink() <-chan float64 {
 	bytesPerSecondSink := make(chan float64)
-	measurements := measurementData{}
+	measurements := measurement.MetricsCollector{}
 
 	go func() {
 		totalWG := sync.WaitGroup{}
@@ -116,7 +110,7 @@ func (o ooklaLoader) DownloadSink() <-chan float64 {
 				speed := float64(o.payloadSize*finished) / time.Since(start).Seconds()
 				measurements = append(measurements, speed)
 
-				bytesPerSecondSink <- (measurements.avg() + measurements.max()) / 2
+				bytesPerSecondSink <- (measurements.Avg() + measurements.Max()) / 2
 
 			}(server.host)
 		}
@@ -129,7 +123,7 @@ func (o ooklaLoader) DownloadSink() <-chan float64 {
 
 func (o ooklaLoader) UploadSink() <-chan float64 {
 	bytesPerSecondSink := make(chan float64)
-	measurements := measurementData{}
+	measurements := measurement.MetricsCollector{}
 
 	payload := make([]byte, o.payloadSize)
 	rand.Read(payload)
@@ -165,7 +159,7 @@ func (o ooklaLoader) UploadSink() <-chan float64 {
 				speed := float64(o.payloadSize*finished) / time.Since(start).Seconds()
 				measurements = append(measurements, speed)
 
-				bytesPerSecondSink <- (measurements.avg() + measurements.max()) / 2
+				bytesPerSecondSink <- (measurements.Avg() + measurements.Max()) / 2
 
 			}(server.uploadUrl)
 		}

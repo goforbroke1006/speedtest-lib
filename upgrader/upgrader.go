@@ -5,24 +5,24 @@ import (
 	"sync"
 	"time"
 
-	"github.com/goforbroke1006/speedtest-lib/loader"
+	"github.com/goforbroke1006/speedtest-lib/domain"
 )
 
-func NewUpgrader(nl loader.NetworkLoader, interval time.Duration) *dataUpgrader {
+func NewUpgrader(nl domain.NetworkLoader, interval time.Duration) *dataUpgrader {
 	return &dataUpgrader{
 		nl:          nl,
 		interval:    interval,
-		dlSpeedMbps: 0.0,
-		ulSpeedMbps: 0.0,
+		dlSpeedMbps: nil,
+		ulSpeedMbps: nil,
 	}
 }
 
 type dataUpgrader struct {
-	nl       loader.NetworkLoader
+	nl       domain.NetworkLoader
 	interval time.Duration
 
-	dlSpeedMbps    float64
-	ulSpeedMbps    float64
+	dlSpeedMbps    *float64
+	ulSpeedMbps    *float64
 	measurementsMX sync.RWMutex
 }
 
@@ -46,7 +46,10 @@ func (u *dataUpgrader) Run() {
 						break
 					}
 					u.measurementsMX.Lock()
-					u.dlSpeedMbps = download
+					if u.dlSpeedMbps == nil {
+						u.dlSpeedMbps = new(float64)
+					}
+					*u.dlSpeedMbps = download
 					u.measurementsMX.Unlock()
 				}
 			}
@@ -59,7 +62,10 @@ func (u *dataUpgrader) Run() {
 						break
 					}
 					u.measurementsMX.Lock()
-					u.ulSpeedMbps = upload
+					if u.ulSpeedMbps == nil {
+						u.ulSpeedMbps = new(float64)
+					}
+					*u.ulSpeedMbps = upload
 					u.measurementsMX.Unlock()
 				}
 			}
@@ -74,19 +80,27 @@ func (u *dataUpgrader) GetDLSpeedMbps() float64 {
 	u.measurementsMX.RLock()
 	defer u.measurementsMX.RUnlock()
 
-	return u.dlSpeedMbps
+	if u.dlSpeedMbps == nil {
+		return 0.0
+	}
+
+	return *u.dlSpeedMbps
 }
 
 func (u *dataUpgrader) GetULSpeedMbps() float64 {
 	u.measurementsMX.RLock()
 	defer u.measurementsMX.RUnlock()
 
-	return u.ulSpeedMbps
+	if u.ulSpeedMbps == nil {
+		return 0.0
+	}
+
+	return *u.ulSpeedMbps
 }
 
 func (u *dataUpgrader) IsReady() bool {
 	u.measurementsMX.RLock()
 	defer u.measurementsMX.RUnlock()
 
-	return u.dlSpeedMbps > 0.0 && u.ulSpeedMbps > 0.0
+	return u.dlSpeedMbps != nil && u.ulSpeedMbps != nil
 }

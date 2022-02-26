@@ -2,10 +2,9 @@ package main
 
 import (
 	"bytes"
+	"github.com/goforbroke1006/speedtest-lib/domain"
 	"net/http/httptest"
 	"testing"
-
-	"github.com/goforbroke1006/speedtest-lib/upgrader"
 )
 
 func Test_healthHandlerMiddleware(t *testing.T) {
@@ -37,7 +36,7 @@ func Test_healthHandlerMiddleware(t *testing.T) {
 
 func Test_readyHandlerMiddleware(t *testing.T) {
 	type args struct {
-		sources map[string]upgrader.Upgrader
+		sources map[string]domain.Upgrader
 	}
 	tests := []struct {
 		name           string
@@ -47,7 +46,7 @@ func Test_readyHandlerMiddleware(t *testing.T) {
 	}{
 		{
 			name: "negative 1 - all provider are not ready",
-			args: args{sources: map[string]upgrader.Upgrader{
+			args: args{sources: map[string]domain.Upgrader{
 				"fake-1": fakeUpgrader{dl: 0, ul: 0},
 				"fake-2": fakeUpgrader{dl: 0, ul: 0},
 				"fake-3": fakeUpgrader{dl: 0, ul: 0},
@@ -57,7 +56,7 @@ func Test_readyHandlerMiddleware(t *testing.T) {
 		},
 		{
 			name: "negative 2 - only one provider is not ready",
-			args: args{sources: map[string]upgrader.Upgrader{
+			args: args{sources: map[string]domain.Upgrader{
 				"fake-1": fakeUpgrader{dl: 1, ul: 1},
 				"fake-2": fakeUpgrader{dl: 3, ul: 2},
 				"fake-3": fakeUpgrader{dl: 0, ul: 0},
@@ -67,7 +66,7 @@ func Test_readyHandlerMiddleware(t *testing.T) {
 		},
 		{
 			name: "positive 1 - all providers are ready",
-			args: args{sources: map[string]upgrader.Upgrader{
+			args: args{sources: map[string]domain.Upgrader{
 				"fake-1": fakeUpgrader{dl: 1, ul: 1},
 				"fake-2": fakeUpgrader{dl: 3, ul: 2},
 				"fake-3": fakeUpgrader{dl: 4, ul: 5},
@@ -92,7 +91,7 @@ func Test_readyHandlerMiddleware(t *testing.T) {
 }
 
 var (
-	_ upgrader.Upgrader = &fakeUpgrader{}
+	_ domain.Upgrader = &fakeUpgrader{}
 )
 
 type fakeUpgrader struct {
@@ -100,7 +99,6 @@ type fakeUpgrader struct {
 }
 
 func (f fakeUpgrader) Run() {
-	//TODO implement me
 }
 
 func (f fakeUpgrader) IsReady() bool {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/goforbroke1006/speedtest-lib/domain"
 	"log"
 	"net/http"
 	"time"
@@ -17,14 +18,14 @@ func main() {
 	netflixUpgrader := upgrader.NewUpgrader(loader.NewNetflixLoader(), time.Minute)
 	go netflixUpgrader.Run()
 
-	sources := map[string]upgrader.Upgrader{
+	sources := map[string]domain.Upgrader{
 		"ookla":   ooklaUpgrader,
 		"netflix": netflixUpgrader,
 	}
 
 	http.HandleFunc("/healthz", healthHandlerMiddleware())
 	http.HandleFunc("/readyz", readyHandlerMiddleware(sources))
-	http.HandleFunc("/test", test_speed.TestSpeedHandler(sources))
+	http.HandleFunc("/test", test_speed.HandlerMiddleware(sources))
 
 	log.Fatal(http.ListenAndServe("0.0.0.0:8080", nil))
 }
@@ -36,7 +37,7 @@ func healthHandlerMiddleware() func(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func readyHandlerMiddleware(sources map[string]upgrader.Upgrader) func(w http.ResponseWriter, req *http.Request) {
+func readyHandlerMiddleware(sources map[string]domain.Upgrader) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		for _, s := range sources {
 			if !s.IsReady() {

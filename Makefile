@@ -1,4 +1,4 @@
-.PHONY: all dep test coverage
+.PHONY: all dep test benchmark coverage
 
 all: dep test
 
@@ -7,6 +7,9 @@ dep:
 
 test:
 	go test ./... -cover
+
+benchmark:
+	go test -gcflags="-N" ./... -bench=.
 
 coverage:
 	go test --coverprofile ./.coverage ./...

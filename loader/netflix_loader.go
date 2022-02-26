@@ -2,6 +2,8 @@ package loader
 
 import (
 	"github.com/ddo/go-fast"
+
+	"github.com/goforbroke1006/speedtest-lib/domain"
 )
 
 func NewNetflixLoader() *netflixLoader {
@@ -17,7 +19,7 @@ func NewNetflixLoader() *netflixLoader {
 }
 
 var (
-	_ NetworkLoader = &netflixLoader{}
+	_ domain.NetworkLoader = &netflixLoader{}
 )
 
 type netflixLoader struct {
@@ -37,14 +39,6 @@ func (n *netflixLoader) LoadConfig() error {
 }
 
 func (n netflixLoader) DownloadSink() <-chan float64 {
-	return n.universalSink()
-}
-
-func (n netflixLoader) UploadSink() <-chan float64 {
-	return n.universalSink()
-}
-
-func (n netflixLoader) universalSink() <-chan float64 {
 	bytesPerSecondSink := make(chan float64)
 
 	KbpsChan := make(chan float64)
@@ -58,10 +52,18 @@ func (n netflixLoader) universalSink() <-chan float64 {
 
 	go func() {
 		if err := n.fastCom.Measure(n.urls, KbpsChan); err != nil {
-			close(KbpsChan)
-			close(bytesPerSecondSink)
+			// TODO:
 		}
 	}()
 
+	return bytesPerSecondSink
+}
+
+func (n netflixLoader) UploadSink() <-chan float64 {
+	bytesPerSecondSink := make(chan float64)
+	go func() {
+		bytesPerSecondSink <- 0.0
+		close(bytesPerSecondSink)
+	}()
 	return bytesPerSecondSink
 }

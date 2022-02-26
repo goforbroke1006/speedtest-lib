@@ -1,4 +1,4 @@
-package upgrader
+package domain
 
 type Upgrader interface {
 	Run()
