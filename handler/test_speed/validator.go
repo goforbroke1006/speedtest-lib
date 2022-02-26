@@ -14,5 +14,5 @@ func (rv requestValidator) Validate(req *http.Request) (errs []string) {
 		}
 	}
 
-	return nil
+	return errs
 }

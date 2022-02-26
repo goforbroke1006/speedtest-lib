@@ -17,18 +17,29 @@ func main() {
 	netflixUpgrader := upgrader.NewUpgrader(loader.NewNetflixLoader(), time.Minute)
 	go netflixUpgrader.Run()
 
-	sources := map[string]test_speed.Upgrader{
+	sources := map[string]upgrader.Upgrader{
 		"ookla":   ooklaUpgrader,
 		"netflix": netflixUpgrader,
 	}
 
-	http.HandleFunc("/healthz", func(w http.ResponseWriter, req *http.Request) {
+	http.HandleFunc("/healthz", healthHandlerMiddleware())
+	http.HandleFunc("/readyz", readyHandlerMiddleware(sources))
+	http.HandleFunc("/test", test_speed.TestSpeedHandler(sources))
+
+	log.Fatal(http.ListenAndServe("0.0.0.0:8080", nil))
+}
+
+func healthHandlerMiddleware() func(w http.ResponseWriter, req *http.Request) {
+	return func(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("ok"))
-	})
-	http.HandleFunc("/readyz", func(w http.ResponseWriter, req *http.Request) {
+	}
+}
+
+func readyHandlerMiddleware(sources map[string]upgrader.Upgrader) func(w http.ResponseWriter, req *http.Request) {
+	return func(w http.ResponseWriter, req *http.Request) {
 		for _, s := range sources {
-			if !s.(upgrader.Upgrader).IsReady() {
+			if !s.IsReady() {
 				w.WriteHeader(http.StatusNotFound)
 				_, _ = w.Write([]byte("fail"))
 				return
@@ -36,9 +47,5 @@ func main() {
 		}
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("ok"))
-	})
-
-	http.HandleFunc("/test", test_speed.TestSpeedHandler(sources))
-
-	log.Fatal(http.ListenAndServe("0.0.0.0:8080", nil))
+	}
 }

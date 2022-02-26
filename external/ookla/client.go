@@ -17,12 +17,12 @@ func NewOoklaSpeedTestClient() *ooklaSpeedTestClient {
 		Timeout: time.Minute,
 	}
 	return &ooklaSpeedTestClient{
-		httpClient: hc,
+		httpClient: &hc,
 	}
 }
 
 type ooklaSpeedTestClient struct {
-	httpClient http.Client
+	httpClient httpClientInt
 }
 
 func (c ooklaSpeedTestClient) GetClientConfig() (cc ClientConfig, err error) {
@@ -95,7 +95,8 @@ func (c ooklaSpeedTestClient) Upload(url string, payload []byte) error {
 		return err
 	}
 
-	fmt.Println(string(respBody))
+	_ = respBody
+	//fmt.Println(string(respBody))
 
 	return nil
 }
