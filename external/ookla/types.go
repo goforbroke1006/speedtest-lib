@@ -6,15 +6,29 @@ import (
 )
 
 type ClientConfig struct {
-	XMLName    xml.Name `xml:"settings"`
-	Client     Client   `xml:"client"`
-	LicenseKey string   `xml:"licensekey"`
+	XMLName    xml.Name     `xml:"settings"`
+	Client     Client       `xml:"client"`
+	LicenseKey string       `xml:"licensekey"`
+	Download   DownloadPlan `xml:"download"`
+	Upload     UploadPlan   `xml:"upload"`
 }
+
 type Client struct {
 	XMLName xml.Name `xml:"client"`
 	IP      string   `xml:"ip,attr"`
-	Lat     string   `xml:"lat,attr"`
-	Lon     string   `xml:"lon,attr"`
+	Lat     float64  `xml:"lat,attr"`
+	Lon     float64  `xml:"lon,attr"`
+}
+
+type DownloadPlan struct {
+	XMLName       xml.Name `xml:"download"`
+	ThreadsPerUrl uint     `xml:"threadsperurl,attr"`
+}
+
+type UploadPlan struct {
+	XMLName       xml.Name `xml:"upload"`
+	Threads       uint     `xml:"threads,attr"`
+	ThreadsPerUrl uint     `xml:"threadsperurl,attr"`
 }
 
 type ServersList []ServerSummary

@@ -11,20 +11,30 @@ var (
 type netflixLoader struct {
 }
 
-func (n netflixLoader) LoadServersList() (uint, error) {
+func (n netflixLoader) LoadConfig() error {
 	//TODO implement me
 	//panic("implement me")
-	return 1, nil
+	return nil
 }
 
-func (n netflixLoader) Download() (bytesPerSecond float64, err error) {
+func (n netflixLoader) DownloadSink() <-chan float64 {
 	//TODO implement me
 	//panic("implement me")
-	return 0.1, nil
+	bytesPerSecondSink := make(chan float64)
+	go func() {
+		bytesPerSecondSink <- 0.1
+		close(bytesPerSecondSink)
+	}()
+	return bytesPerSecondSink
 }
 
-func (n netflixLoader) Upload() (bytesPerSecond float64, err error) {
+func (n netflixLoader) UploadSink() <-chan float64 {
 	//TODO implement me
 	//panic("implement me")
-	return 0.1, nil
+	bytesPerSecondSink := make(chan float64)
+	go func() {
+		bytesPerSecondSink <- 0.1
+		close(bytesPerSecondSink)
+	}()
+	return bytesPerSecondSink
 }

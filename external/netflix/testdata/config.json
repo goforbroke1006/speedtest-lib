@@ -1,0 +1,53 @@
+{
+  "client": {
+    "ip": "178.70.74.118",
+    "asn": "12389",
+    "isp": "Rostelecom",
+    "location": {
+      "city": "St Petersburg",
+      "country": "RU"
+    }
+  },
+  "targets": [
+    {
+      "name": "https://ipv4-c039-vie001-ix.1.oca.nflxvideo.net/speedtest?c=ru&n=12389&v=82&e=1645916260&t=JT-2PwYcFiBMI-Zm1p4XvAD-HldYwdpTgY0V-w",
+      "url": "https://ipv4-c039-vie001-ix.1.oca.nflxvideo.net/speedtest?c=ru&n=12389&v=82&e=1645916260&t=JT-2PwYcFiBMI-Zm1p4XvAD-HldYwdpTgY0V-w",
+      "location": {
+        "city": "Vienna",
+        "country": "AT"
+      }
+    },
+    {
+      "name": "https://ipv4-c001-vie001-ix.1.oca.nflxvideo.net/speedtest?c=ru&n=12389&v=82&e=1645916260&t=8JViKeG5p1nYQady501faRBF3OxVInkKw3-_Aw",
+      "url": "https://ipv4-c001-vie001-ix.1.oca.nflxvideo.net/speedtest?c=ru&n=12389&v=82&e=1645916260&t=8JViKeG5p1nYQady501faRBF3OxVInkKw3-_Aw",
+      "location": {
+        "city": "Vienna",
+        "country": "AT"
+      }
+    },
+    {
+      "name": "https://ipv4-c019-buh001-ix.1.oca.nflxvideo.net/speedtest?c=ru&n=12389&v=82&e=1645916260&t=mPv3Zx7II0v6kFXQr3BYsqDg0gBR1yPmc35Zwg",
+      "url": "https://ipv4-c019-buh001-ix.1.oca.nflxvideo.net/speedtest?c=ru&n=12389&v=82&e=1645916260&t=mPv3Zx7II0v6kFXQr3BYsqDg0gBR1yPmc35Zwg",
+      "location": {
+        "city": "Bucharest",
+        "country": "RO"
+      }
+    },
+    {
+      "name": "https://ipv4-c006-buh001-ix.1.oca.nflxvideo.net/speedtest?c=ru&n=12389&v=82&e=1645916260&t=ox7X34GQtCYjiCvfrweG_ZzrLUEfURZiEVbMig",
+      "url": "https://ipv4-c006-buh001-ix.1.oca.nflxvideo.net/speedtest?c=ru&n=12389&v=82&e=1645916260&t=ox7X34GQtCYjiCvfrweG_ZzrLUEfURZiEVbMig",
+      "location": {
+        "city": "Bucharest",
+        "country": "RO"
+      }
+    },
+    {
+      "name": "https://ipv4-c002-fra002-dev-ix.1.oca.nflxvideo.net/speedtest?c=ru&n=12389&v=82&e=1645916260&t=i6QYNprH-lGpWRcCefyBDs895Z_eWiVrcbMk8g",
+      "url": "https://ipv4-c002-fra002-dev-ix.1.oca.nflxvideo.net/speedtest?c=ru&n=12389&v=82&e=1645916260&t=i6QYNprH-lGpWRcCefyBDs895Z_eWiVrcbMk8g",
+      "location": {
+        "city": "Frankfurt",
+        "country": "DE"
+      }
+    }
+  ]
+}

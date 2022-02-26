@@ -1,4 +1,4 @@
-.PHONY: all dep test
+.PHONY: all dep test coverage
 
 all: dep test
 
@@ -7,3 +7,7 @@ dep:
 
 test:
 	go test ./... -cover
+
+coverage:
+	go test --coverprofile ./.coverage ./...
+	go tool cover -html ./.coverage

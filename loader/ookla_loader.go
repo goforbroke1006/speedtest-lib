@@ -16,13 +16,14 @@ func NewOoklaLoader() *ooklaLoader {
 		client:     client,
 		servers:    nil,
 		licenseKey: "",
-		payloadSizes: []int{
-			1 * 1024 * 1024,  // 1 mega bytes
-			2 * 1024 * 1024,  // 2 mega bytes
-			5 * 1024 * 1024,  // 5 mega bytes
-			10 * 1024 * 1024, // 10 mega bytes
-			25 * 1024 * 1024, // 25 mega bytes
-		},
+		//payloadSizes: []int{
+		//	1 * 1024 * 1024,  // 1 mega bytes
+		//	2 * 1024 * 1024,  // 2 mega bytes
+		//	5 * 1024 * 1024,  // 5 mega bytes
+		//	10 * 1024 * 1024, // 10 mega bytes
+		//	25 * 1024 * 1024, // 25 mega bytes
+		//},
+		payloadSize: 25 * 1024 * 1024, // 25 mega bytes
 	}
 }
 
@@ -36,20 +37,32 @@ type ooklaLoader struct {
 		host      string
 		uploadUrl string
 	}
-	licenseKey   string
-	payloadSizes []int
+	licenseKey string
+	//payloadSizes []int
+	payloadSize uint
+
+	downloadThreadTotal   uint
+	downloadThreadPerLink uint
+	uploadThreadTotal     uint
+	uploadThreadPerLink   uint
 }
 
-func (o *ooklaLoader) LoadServersList() (uint, error) {
+func (o *ooklaLoader) LoadConfig() error {
 	cc, err := o.client.GetClientConfig()
 	if err != nil {
-		return 0, err
+		return err
 	}
+
+	o.downloadThreadTotal = 1
+	o.downloadThreadPerLink = cc.Download.ThreadsPerUrl
+	o.uploadThreadTotal = cc.Upload.Threads
+	o.uploadThreadPerLink = cc.Upload.ThreadsPerUrl
+
 	o.licenseKey = cc.LicenseKey
 
 	serversList, err := o.client.GetServersList()
 	if err != nil {
-		return 0, err
+		return err
 	}
 	var servers []struct {
 		host      string
@@ -64,61 +77,101 @@ func (o *ooklaLoader) LoadServersList() (uint, error) {
 	}
 	o.servers = servers
 
-	return uint(len(servers)), nil
+	return nil
 }
 
-func (o ooklaLoader) Download() (bytesPerSecond float64, err error) {
+func (o ooklaLoader) DownloadSink() <-chan float64 {
+	bytesPerSecondSink := make(chan float64)
 	measurements := measurementData{}
 
-	var wg sync.WaitGroup
-	for _, server := range o.servers {
-		wg.Add(1)
-		go func(host string) {
-			defer wg.Done()
+	go func() {
+		totalWG := sync.WaitGroup{}
+		maxThreadsSem := make(chan struct{}, o.downloadThreadTotal)
+		for _, server := range o.servers {
 
-			for _, ps := range o.payloadSizes {
+			maxThreadsSem <- struct{}{} // reserve
+			totalWG.Add(1)
+
+			go func(host string) {
+				defer func() {
+					<-maxThreadsSem // release
+					totalWG.Done()
+				}()
+
+				perLinkWG := sync.WaitGroup{}
+				finished := uint(0)
 				start := time.Now()
-				if err := o.client.Download(host, o.licenseKey, uint64(ps)); err != nil {
-					fmt.Println(err.Error())
-					return
+				for i := uint(0); i < o.downloadThreadPerLink; i++ {
+					perLinkWG.Add(1)
+					go func() {
+						defer perLinkWG.Done()
+						if err := o.client.Download(host, o.licenseKey, uint64(o.payloadSize)); err != nil {
+							fmt.Println(err.Error())
+							return
+						}
+						finished++
+					}()
 				}
-				spend := time.Since(start).Seconds()
-				speed := float64(ps) / spend
+				perLinkWG.Wait()
+				speed := float64(o.payloadSize*finished) / time.Since(start).Seconds()
 				measurements = append(measurements, speed)
-			}
 
-		}(server.host)
-	}
-	wg.Wait()
+				bytesPerSecondSink <- (measurements.avg() + measurements.max()) / 2
 
-	return measurements.arg(), nil
+			}(server.host)
+		}
+		totalWG.Wait()
+		close(bytesPerSecondSink)
+	}()
+
+	return bytesPerSecondSink
 }
 
-func (o ooklaLoader) Upload() (bytesPerSecond float64, err error) {
+func (o ooklaLoader) UploadSink() <-chan float64 {
+	bytesPerSecondSink := make(chan float64)
 	measurements := measurementData{}
 
-	var wg sync.WaitGroup
-	for _, server := range o.servers {
-		wg.Add(1)
-		go func(url string) {
-			defer wg.Done()
+	payload := make([]byte, o.payloadSize)
+	rand.Read(payload)
 
-			for _, ps := range o.payloadSizes {
-				payload := make([]byte, ps)
-				rand.Read(payload)
+	go func() {
+		totalWG := sync.WaitGroup{}
+		maxThreadsSem := make(chan struct{}, o.uploadThreadTotal)
+		for _, server := range o.servers {
 
+			maxThreadsSem <- struct{}{} // reserve
+			totalWG.Add(1)
+
+			go func(url string) {
+				defer func() {
+					<-maxThreadsSem // release
+					totalWG.Done()
+				}()
+
+				perLinkWG := sync.WaitGroup{}
+				finished := uint(0)
 				start := time.Now()
-				if err := o.client.Upload(url, payload); err != nil {
-					return
+				for i := uint(0); i < o.uploadThreadPerLink; i++ {
+					perLinkWG.Add(1)
+					go func() {
+						defer perLinkWG.Done()
+						if err := o.client.Upload(url, payload); err != nil {
+							return
+						}
+						finished++
+					}()
 				}
-				spend := time.Since(start).Seconds()
-				speed := float64(ps) / spend
+				perLinkWG.Wait()
+				speed := float64(o.payloadSize*finished) / time.Since(start).Seconds()
 				measurements = append(measurements, speed)
-			}
 
-		}(server.uploadUrl)
-	}
-	wg.Wait()
+				bytesPerSecondSink <- (measurements.avg() + measurements.max()) / 2
 
-	return measurements.arg(), nil
+			}(server.uploadUrl)
+		}
+		totalWG.Wait()
+		close(bytesPerSecondSink)
+	}()
+
+	return bytesPerSecondSink
 }

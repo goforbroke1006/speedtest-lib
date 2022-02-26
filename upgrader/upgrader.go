@@ -32,19 +32,19 @@ func (u *dataUpgrader) Run() {
 		start := time.Now()
 
 		func() {
-			count, err := u.nl.LoadServersList()
+			err := u.nl.LoadConfig()
 			if err != nil {
 				fmt.Println(err.Error())
 				return
 			}
 
-			fmt.Println("load servers", count)
-
 			{
-				download, err := u.nl.Download()
-				if err != nil {
-					fmt.Println(err.Error())
-				} else {
+				sink := u.nl.DownloadSink()
+				for {
+					download, opened := <-sink
+					if !opened {
+						break
+					}
 					u.measurementsMX.Lock()
 					u.dlSpeedMbps = download
 					u.measurementsMX.Unlock()
@@ -52,10 +52,12 @@ func (u *dataUpgrader) Run() {
 			}
 
 			{
-				upload, err := u.nl.Upload()
-				if err != nil {
-					fmt.Println(err.Error())
-				} else {
+				sink := u.nl.UploadSink()
+				for {
+					upload, opened := <-sink
+					if !opened {
+						break
+					}
 					u.measurementsMX.Lock()
 					u.ulSpeedMbps = upload
 					u.measurementsMX.Unlock()

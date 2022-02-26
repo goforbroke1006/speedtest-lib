@@ -10,6 +10,25 @@ import (
 	"testing"
 )
 
+func TestNewOoklaSpeedTestClient(t *testing.T) {
+	tests := []struct {
+		name string
+		want bool
+	}{
+		{
+			name: "always return client instance",
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := NewOoklaSpeedTestClient(); tt.want != (got != nil) {
+				t.Errorf("NewOoklaSpeedTestClient() not nil, want %v", tt.want)
+			}
+		})
+	}
+}
+
 func Test_ooklaSpeedTestClient_GetClientConfig(t *testing.T) {
 	type fields struct {
 		httpClient httpClientInt
@@ -28,10 +47,19 @@ func Test_ooklaSpeedTestClient_GetClientConfig(t *testing.T) {
 				Client: Client{
 					XMLName: xml.Name{Local: "client"},
 					IP:      "178.70.74.118",
-					Lat:     "59.8983",
-					Lon:     "30.2618",
+					Lat:     59.8983,
+					Lon:     30.2618,
 				},
 				LicenseKey: "f7a45ced624d3a70-1df5b7cd427370f7-b91ee21d6cb22d7b",
+				Download: DownloadPlan{
+					XMLName:       xml.Name{Local: "download"},
+					ThreadsPerUrl: 4,
+				},
+				Upload: UploadPlan{
+					XMLName:       xml.Name{Local: "upload"},
+					Threads:       2,
+					ThreadsPerUrl: 4,
+				},
 			},
 			wantErr: false,
 		},
