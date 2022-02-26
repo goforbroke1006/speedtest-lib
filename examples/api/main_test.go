@@ -99,6 +99,10 @@ type fakeUpgrader struct {
 	dl, ul float64
 }
 
+func (f fakeUpgrader) Run() {
+	//TODO implement me
+}
+
 func (f fakeUpgrader) IsReady() bool {
 	return f.dl > 0 && f.ul > 0
 }
