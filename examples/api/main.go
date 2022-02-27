@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/goforbroke1006/speedtest-lib/domain"
 	"log"
 	"net/http"
 	"time"
 
+	"github.com/goforbroke1006/speedtest-lib/domain"
 	"github.com/goforbroke1006/speedtest-lib/handler/test_speed"
 	"github.com/goforbroke1006/speedtest-lib/loader"
 	"github.com/goforbroke1006/speedtest-lib/upgrader"
@@ -30,6 +30,7 @@ func main() {
 	log.Fatal(http.ListenAndServe("0.0.0.0:8080", nil))
 }
 
+// healthHandlerMiddleware return simplest health-z check handler
 func healthHandlerMiddleware() func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -37,6 +38,7 @@ func healthHandlerMiddleware() func(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+// healthHandlerMiddleware return simplest ready-z check handler
 func readyHandlerMiddleware(sources map[string]domain.Upgrader) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		for _, s := range sources {

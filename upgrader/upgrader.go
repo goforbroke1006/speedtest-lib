@@ -26,7 +26,6 @@ type dataUpgrader struct {
 	measurementsMX sync.RWMutex
 }
 
-// Run loads download/upload speed summary asynchronously
 func (u *dataUpgrader) Run() {
 	for {
 		start := time.Now()

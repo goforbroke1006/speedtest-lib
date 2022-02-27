@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// NewOoklaSpeedTestClient returns new client for https://www.speedtest.net/
 func NewOoklaSpeedTestClient() *ooklaSpeedTestClient {
 	hc := http.Client{
 		Timeout: time.Minute,

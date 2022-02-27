@@ -7,6 +7,10 @@ Speed test lib provides mechanism for network bandwidth check
 * Ookla's https://www.speedtest.net/
 * Netflix's https://fast.com/
 
+### Minimal server
+
+Check file [examples/api/main.go](./examples/api/main.go)
+
 ### How to run main example
 
 In terminal

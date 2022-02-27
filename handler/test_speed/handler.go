@@ -3,12 +3,13 @@ package test_speed
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/goforbroke1006/speedtest-lib/domain"
 	"net/http"
 
+	"github.com/goforbroke1006/speedtest-lib/domain"
 	"github.com/goforbroke1006/speedtest-lib/pkg/content_len"
 )
 
+// HandlerMiddleware use unwarmed upgraders and return bandwidth data in JSON format
 func HandlerMiddleware(sources map[string]domain.Upgrader) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		rv := requestValidator{}
