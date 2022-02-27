@@ -40,9 +40,11 @@ func (c ooklaSpeedTestClient) GetClientConfig() (cc ClientConfig, err error) {
 		return
 	}
 
-	err = xml.Unmarshal(respBody, &cc)
+	if err = xml.Unmarshal(respBody, &cc); err != nil {
+		return ClientConfig{}, err
+	}
 
-	return cc, err
+	return cc, nil
 }
 
 func (c ooklaSpeedTestClient) GetServersList() (list ServersList, err error) {

@@ -2,6 +2,7 @@ package ookla
 
 import (
 	"encoding/xml"
+	"errors"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -40,7 +41,25 @@ func Test_ooklaSpeedTestClient_GetClientConfig(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:   "can read client config",
+			name:    "negative - on http error",
+			fields:  fields{httpClient: fakeHttpClientInt{getErr: true}},
+			wantCc:  ClientConfig{},
+			wantErr: true,
+		},
+		{
+			name:    "negative - on broken resp body reader",
+			fields:  fields{httpClient: fakeHttpClientInt{getBrokeRespBodyReader: true}},
+			wantCc:  ClientConfig{},
+			wantErr: true,
+		},
+		{
+			name:    "negative - on broken JSON content",
+			fields:  fields{httpClient: fakeHttpClientInt{getBrokeRespBodyFormat: true}},
+			wantCc:  ClientConfig{},
+			wantErr: true,
+		},
+		{
+			name:   "positive - can read client config",
 			fields: fields{httpClient: fakeHttpClientInt{}},
 			wantCc: ClientConfig{
 				XMLName: xml.Name{Local: "settings"},
@@ -92,6 +111,24 @@ func Test_ooklaSpeedTestClient_GetServersList(t *testing.T) {
 		wantErr  bool
 	}{
 		{
+			name:     "negative - on http error",
+			fields:   fields{httpClient: fakeHttpClientInt{getErr: true}},
+			wantList: nil,
+			wantErr:  true,
+		},
+		{
+			name:     "negative - on broken resp body reader",
+			fields:   fields{httpClient: fakeHttpClientInt{getBrokeRespBodyReader: true}},
+			wantList: nil,
+			wantErr:  true,
+		},
+		{
+			name:     "negative - on broken JSON content",
+			fields:   fields{httpClient: fakeHttpClientInt{getBrokeRespBodyFormat: true}},
+			wantList: nil,
+			wantErr:  true,
+		},
+		{
 			name:   "positive 1 - with fake response",
 			fields: fields{httpClient: fakeHttpClientInt{}},
 			wantList: ServersList{
@@ -140,21 +177,139 @@ func Test_ooklaSpeedTestClient_GetServersList(t *testing.T) {
 	}
 }
 
+func Test_ooklaSpeedTestClient_Download(t *testing.T) {
+	type fields struct {
+		httpClient httpClientInt
+	}
+	type args struct {
+		bytesSize uint64
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			name:    "negative - on http error",
+			fields:  fields{httpClient: fakeHttpClientInt{getErr: true}},
+			args:    args{bytesSize: 0},
+			wantErr: true,
+		},
+		{
+			name:    "negative - on broken resp body reader",
+			fields:  fields{httpClient: fakeHttpClientInt{getBrokeRespBodyReader: true}},
+			args:    args{bytesSize: 0},
+			wantErr: true,
+		},
+		{
+			name:    "negative - on wrong content length",
+			fields:  fields{httpClient: fakeHttpClientInt{getCertainContentLen: 9}},
+			args:    args{bytesSize: 10},
+			wantErr: true,
+		},
+		{
+			name:    "positive - correct content length",
+			fields:  fields{httpClient: fakeHttpClientInt{getCertainContentLen: 111}},
+			args:    args{bytesSize: 111},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := ooklaSpeedTestClient{
+				httpClient: tt.fields.httpClient,
+			}
+			if err := c.Download("tt.args.host", "tt.args.licence", tt.args.bytesSize); (err != nil) != tt.wantErr {
+				t.Errorf("Download() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_ooklaSpeedTestClient_Upload(t *testing.T) {
+	type fields struct {
+		httpClient httpClientInt
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		{
+			name:    "negative - on http error",
+			fields:  fields{httpClient: fakeHttpClientInt{postErr: true}},
+			wantErr: true,
+		},
+		{
+			name:    "negative - on broken resp body reader",
+			fields:  fields{httpClient: fakeHttpClientInt{postBrokeRespBodyReader: true}},
+			wantErr: true,
+		},
+		{
+			name:    "positive - ok",
+			fields:  fields{httpClient: fakeHttpClientInt{}},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := ooklaSpeedTestClient{
+				httpClient: tt.fields.httpClient,
+			}
+			if err := c.Upload("http://some-server/upload.php", []byte("tt.args.payload")); (err != nil) != tt.wantErr {
+				t.Errorf("Upload() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
 var (
 	_ httpClientInt = &fakeHttpClientInt{}
 )
 
 type fakeHttpClientInt struct {
+	getErr                  bool
+	postErr                 bool
+	getBrokeRespBodyReader  bool
+	postBrokeRespBodyReader bool
+	getBrokeRespBodyFormat  bool
+	getCertainContentLen    uint
 }
 
 func (f fakeHttpClientInt) Get(url string) (resp *http.Response, err error) {
+	if f.getErr {
+		return nil, errors.New("fake error")
+	}
+
+	if f.getBrokeRespBodyReader {
+		resp = new(http.Response)
+		resp.Body = io.NopCloser(brokenReader{})
+		return
+	}
+
+	if f.getCertainContentLen > 0 {
+		resp = new(http.Response)
+		buf := make([]byte, f.getCertainContentLen)
+		resp.Body = io.NopCloser(strings.NewReader(string(buf)))
+		return
+	}
+
 	if strings.Contains(url, "speedtest-config.php") {
 		resp = new(http.Response)
 		readFile, err := ioutil.ReadFile("./testdata/speedtest-config-1.xml")
 		if err != nil {
 			panic(err)
 		}
-		resp.Body = io.NopCloser(strings.NewReader(string(readFile)))
+		content := string(readFile)
+
+		if f.getBrokeRespBodyFormat {
+			content = "wildfowl for broken content" + content
+			content = content[:len(content)-1]
+		}
+
+		resp.Body = io.NopCloser(strings.NewReader(content))
+
 		return resp, nil
 	}
 
@@ -164,7 +319,15 @@ func (f fakeHttpClientInt) Get(url string) (resp *http.Response, err error) {
 		if err != nil {
 			panic(err)
 		}
-		resp.Body = io.NopCloser(strings.NewReader(string(readFile)))
+		content := string(readFile)
+
+		if f.getBrokeRespBodyFormat {
+			content = "wildfowl for broken content" + content
+			content = content[:len(content)-1]
+		}
+
+		resp.Body = io.NopCloser(strings.NewReader(content))
+
 		return resp, nil
 	}
 
@@ -172,6 +335,28 @@ func (f fakeHttpClientInt) Get(url string) (resp *http.Response, err error) {
 }
 
 func (f fakeHttpClientInt) Post(url, contentType string, body io.Reader) (resp *http.Response, err error) {
-	//TODO implement me
+	if f.postErr {
+		return nil, errors.New("fake error")
+	}
+
+	if f.postBrokeRespBodyReader {
+		resp = new(http.Response)
+		resp.Body = io.NopCloser(brokenReader{})
+		return
+	}
+
+	if strings.Contains(url, "upload.php") {
+		resp = new(http.Response)
+		resp.Body = io.NopCloser(strings.NewReader("hello"))
+		return
+	}
+
 	panic("implement me")
+}
+
+type brokenReader struct {
+}
+
+func (br brokenReader) Read(_ []byte) (int, error) {
+	return 0, errors.New("fake error")
 }
