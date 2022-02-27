@@ -23,10 +23,8 @@ var (
 )
 
 type netflixLoader struct {
-	fastCom          *fast.Fast
-	urls             []string
-	downloadKbpsChan chan float64
-	uploadKbpsChan   chan float64
+	fastCom *fast.Fast
+	urls    []string
 }
 
 func (n *netflixLoader) LoadConfig() error {
@@ -51,9 +49,7 @@ func (n netflixLoader) DownloadSink() <-chan float64 {
 	}()
 
 	go func() {
-		if err := n.fastCom.Measure(n.urls, KbpsChan); err != nil {
-			// TODO:
-		}
+		_ = n.fastCom.Measure(n.urls, KbpsChan)
 	}()
 
 	return bytesPerSecondSink

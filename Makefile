@@ -1,12 +1,15 @@
-.PHONY: all dep test benchmark coverage
+.PHONY: all dep test lint benchmark coverage
 
-all: dep test
+all: dep test lint
 
 dep:
 	go mod download
 
 test:
 	go test ./... -cover
+
+lint:
+	golangci-lint run
 
 benchmark:
 	go test -gcflags="-N" ./... -bench=.

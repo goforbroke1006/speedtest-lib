@@ -334,7 +334,7 @@ func (f fakeHttpClientInt) Get(url string) (resp *http.Response, err error) {
 	panic("implement me")
 }
 
-func (f fakeHttpClientInt) Post(url, contentType string, body io.Reader) (resp *http.Response, err error) {
+func (f fakeHttpClientInt) Post(url, _ string, _ io.Reader) (resp *http.Response, err error) {
 	if f.postErr {
 		return nil, errors.New("fake error")
 	}
