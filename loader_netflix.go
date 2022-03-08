@@ -2,8 +2,8 @@ package speedtest_lib
 
 import (
 	"github.com/ddo/go-fast"
-	"github.com/goforbroke1006/speedtest-lib/domain"
 
+	"github.com/goforbroke1006/speedtest-lib/domain"
 	"github.com/goforbroke1006/speedtest-lib/pkg/content"
 )
 

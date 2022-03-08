@@ -2,12 +2,12 @@ package speedtest_lib
 
 import (
 	"errors"
-	"github.com/goforbroke1006/speedtest-lib/domain"
 	"reflect"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 
+	"github.com/goforbroke1006/speedtest-lib/domain"
 	"github.com/goforbroke1006/speedtest-lib/mocks"
 )
 

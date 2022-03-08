@@ -2,8 +2,9 @@ package speedtest_lib
 
 import (
 	"context"
-	"github.com/goforbroke1006/speedtest-lib/domain"
 	"testing"
+
+	"github.com/goforbroke1006/speedtest-lib/domain"
 )
 
 func Test_New(t *testing.T) {
