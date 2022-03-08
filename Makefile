@@ -30,5 +30,7 @@ coverage:
 
 setup:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.44.2
+	golangci-lint --version
 	go install github.com/golang/mock/mockgen@v1.6.0
-	go install golang.org/x/tools/cmd/benchcmp
+	mockgen --version
+	go install golang.org/x/tools/cmd/benchcmp@v0.1.9
