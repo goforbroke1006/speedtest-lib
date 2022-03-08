@@ -1,6 +1,6 @@
-.PHONY: all dep test lint benchmark benchcmp coverage setup
+.PHONY: all dep gen test lint benchmark benchcmp coverage setup
 
-all: dep test lint
+all: dep gen test lint
 
 dep:
 	go mod download

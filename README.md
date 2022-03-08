@@ -67,7 +67,7 @@ Run in terminal:
 
 ```shell
 make setup
-make
+make dep gen
 go run examples/basic/main.go
 
 ```
