@@ -12,7 +12,7 @@ lint:
 	golangci-lint run
 
 benchmark:
-	go test -gcflags="-N" ./... -bench=.
+	go test -gcflags="-N" -bench=. ./...
 
 benchcmp:
 	go test -gcflags="-N" -bench=. -benchmem ./... > new.bench.txt
