@@ -3,6 +3,8 @@ package speedtest_lib
 import (
 	"context"
 	"fmt"
+
+	"github.com/goforbroke1006/speedtest-lib/domain"
 )
 
 type ProviderKind string
@@ -20,13 +22,13 @@ func New() *wrapper {
 }
 
 type wrapper struct {
-	loaderOokla   NetworkLoader
-	loaderNetflix NetworkLoader
+	loaderOokla   domain.NetworkLoader
+	loaderNetflix domain.NetworkLoader
 }
 
 // DoRequest runs specific loader and collect data
 func (w wrapper) DoRequest(ctx context.Context, kind ProviderKind) (download float64, upload float64, err error) {
-	var nl NetworkLoader
+	var nl domain.NetworkLoader
 
 	switch kind {
 	case ProviderKindOokla:
@@ -41,7 +43,10 @@ func (w wrapper) DoRequest(ctx context.Context, kind ProviderKind) (download flo
 		return download, upload, err
 	}
 
-	dls := nl.DownloadSink()
+	dls, err := nl.DownloadSink()
+	if err != nil {
+		return 0, 0, err
+	}
 LoopD:
 	for {
 		select {
@@ -56,7 +61,10 @@ LoopD:
 
 	}
 
-	uls := nl.UploadSink()
+	uls, err := nl.UploadSink()
+	if err != nil {
+		return 0, 0, err
+	}
 LoopU:
 	for {
 		select {

@@ -2,23 +2,37 @@ package speedtest_lib
 
 import (
 	"context"
+	"github.com/goforbroke1006/speedtest-lib/domain"
 	"testing"
 )
 
-func TestDoRequest(t *testing.T) {
+func Test_New(t *testing.T) {
+	instance := New()
+	if instance == nil {
+		t.Errorf("New() should not be NIL")
+	}
+}
+
+func Test_wrapper_DoRequest(t *testing.T) {
+	type fields struct {
+		loaderOokla   domain.NetworkLoader
+		loaderNetflix domain.NetworkLoader
+	}
 	type args struct {
 		ctx  context.Context
 		kind ProviderKind
 	}
 	tests := []struct {
 		name         string
+		fields       fields
 		args         args
 		wantDownload float64
 		wantUpload   float64
 		wantErr      bool
 	}{
 		{
-			name: "negative 1 - unknown provider",
+			name:   "negative 1 - unknown provider",
+			fields: fields{},
 			args: args{
 				ctx:  context.Background(),
 				kind: "wildfowl",
@@ -27,10 +41,39 @@ func TestDoRequest(t *testing.T) {
 			wantUpload:   0,
 			wantErr:      true,
 		},
+		{
+			name: "positive 1 - fake ookla",
+			fields: fields{
+				loaderOokla: fakeLoader{},
+			},
+			args: args{
+				ctx:  context.Background(),
+				kind: "ookla",
+			},
+			wantDownload: 1,
+			wantUpload:   1,
+			wantErr:      false,
+		},
+		{
+			name: "positive 1 - fake netflix",
+			fields: fields{
+				loaderNetflix: fakeLoader{},
+			},
+			args: args{
+				ctx:  context.Background(),
+				kind: "netflix",
+			},
+			wantDownload: 1,
+			wantUpload:   1,
+			wantErr:      false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w := wrapper{}
+			w := wrapper{
+				loaderOokla:   tt.fields.loaderOokla,
+				loaderNetflix: tt.fields.loaderNetflix,
+			}
 			gotDownload, gotUpload, err := w.DoRequest(tt.args.ctx, tt.args.kind)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DoRequest() error = %v, wantErr %v", err, tt.wantErr)
@@ -44,6 +87,32 @@ func TestDoRequest(t *testing.T) {
 			}
 		})
 	}
+}
+
+type fakeLoader struct{}
+
+var _ domain.NetworkLoader = &fakeLoader{}
+
+func (l fakeLoader) LoadConfig() error {
+	return nil
+}
+
+func (l fakeLoader) DownloadSink() (bits <-chan float64, err error) {
+	bitsPerSecondSink := make(chan float64)
+	go func() {
+		bitsPerSecondSink <- 1
+		close(bitsPerSecondSink)
+	}()
+	return bitsPerSecondSink, nil
+}
+
+func (l fakeLoader) UploadSink() (bits <-chan float64, err error) {
+	bitsPerSecondSink := make(chan float64)
+	go func() {
+		bitsPerSecondSink <- 1
+		close(bitsPerSecondSink)
+	}()
+	return bitsPerSecondSink, nil
 }
 
 // Benchmark_DoRequest_Ookla-12    	       1	15839082397 ns/op

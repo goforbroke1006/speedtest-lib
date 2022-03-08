@@ -3,31 +3,37 @@ package speedtest_lib
 import (
 	"github.com/showwin/speedtest-go/speedtest"
 
+	"github.com/goforbroke1006/speedtest-lib/domain"
+	"github.com/goforbroke1006/speedtest-lib/pkg/content"
 	"github.com/goforbroke1006/speedtest-lib/pkg/measurement"
 )
 
 func newOoklaLoader() *ooklaLoaderDefault {
-	return &ooklaLoaderDefault{}
+	return &ooklaLoaderDefault{
+		client: speedtest.New(),
+	}
 }
 
 var (
-	_ NetworkLoader = &ooklaLoaderDefault{}
+	_ domain.NetworkLoader = &ooklaLoaderDefault{}
 )
 
 type ooklaLoaderDefault struct {
+	client  domain.OoklaSpeedTestClient
 	targets speedtest.Servers
 }
 
 func (o *ooklaLoaderDefault) LoadConfig() error {
-	user, err := speedtest.FetchUserInfo()
+	user, err := o.client.FetchUserInfo()
 	if err != nil {
 		return err
 	}
-	client := speedtest.New()
-	serverList, err := client.FetchServers(user)
+
+	serverList, err := o.client.FetchServers(user)
 	if err != nil {
 		return err
 	}
+
 	targets, err := serverList.FindServer([]int{})
 	if err != nil {
 		return err
@@ -37,8 +43,8 @@ func (o *ooklaLoaderDefault) LoadConfig() error {
 	return nil
 }
 
-func (o ooklaLoaderDefault) DownloadSink() <-chan float64 {
-	bytesPerSecondSink := make(chan float64)
+func (o ooklaLoaderDefault) DownloadSink() (<-chan float64, error) {
+	bitsPerSecondSink := make(chan float64)
 	go func() {
 		measurements := measurement.MetricsCollector{}
 		for _, s := range o.targets {
@@ -48,17 +54,17 @@ func (o ooklaLoaderDefault) DownloadSink() <-chan float64 {
 			if err := s.DownloadTest(false); err != nil {
 				continue
 			}
-			measurements = append(measurements, s.DLSpeed)
-			//fmt.Printf("Latency: %s, Download: %f, Upload: %f\n", s.Latency, s.DLSpeed, s.ULSpeed)
-			bytesPerSecondSink <- measurements.Avg()
+			bits := content.DataLen(s.DLSpeed * content.MegaBit).Bits()
+			measurements = append(measurements, float64(bits))
+			bitsPerSecondSink <- measurements.Avg()
 		}
-		close(bytesPerSecondSink)
+		close(bitsPerSecondSink)
 	}()
-	return bytesPerSecondSink
+	return bitsPerSecondSink, nil
 }
 
-func (o ooklaLoaderDefault) UploadSink() <-chan float64 {
-	bytesPerSecondSink := make(chan float64)
+func (o ooklaLoaderDefault) UploadSink() (<-chan float64, error) {
+	bitsPerSecondSink := make(chan float64)
 	go func() {
 		measurements := measurement.MetricsCollector{}
 		for _, s := range o.targets {
@@ -68,11 +74,11 @@ func (o ooklaLoaderDefault) UploadSink() <-chan float64 {
 			if err := s.UploadTest(false); err != nil {
 				continue
 			}
-			measurements = append(measurements, s.ULSpeed)
-			//fmt.Printf("Latency: %s, Download: %f, Upload: %f\n", s.Latency, s.DLSpeed, s.ULSpeed)
-			bytesPerSecondSink <- measurements.Avg()
+			bits := content.DataLen(s.ULSpeed * content.MegaBit).Bits()
+			measurements = append(measurements, float64(bits))
+			bitsPerSecondSink <- measurements.Avg()
 		}
-		close(bytesPerSecondSink)
+		close(bitsPerSecondSink)
 	}()
-	return bytesPerSecondSink
+	return bitsPerSecondSink, nil
 }

@@ -5,6 +5,9 @@ all: dep test lint
 dep:
 	go mod download
 
+gen:
+	go generate ./...
+
 test:
 	go test ./... -cover
 
@@ -26,4 +29,6 @@ coverage:
 	go tool cover -html ./.coverage
 
 setup:
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.44.2
+	go install github.com/golang/mock/mockgen@v1.6.0
 	go install golang.org/x/tools/cmd/benchcmp

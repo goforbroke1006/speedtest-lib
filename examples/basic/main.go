@@ -6,7 +6,7 @@ import (
 	"time"
 
 	speedtest_lib "github.com/goforbroke1006/speedtest-lib"
-	"github.com/goforbroke1006/speedtest-lib/pkg/content_len"
+	"github.com/goforbroke1006/speedtest-lib/pkg/content"
 )
 
 func main() {
@@ -25,8 +25,8 @@ func main() {
 		panic(err)
 	}
 	fmt.Println("Ookla  ",
-		"D", content_len.DataLen(download).MegaBites(),
-		"U", content_len.DataLen(upload).MegaBites(),
+		"D", content.DataLen(download*content.Bit).MegaBites(),
+		"U", content.DataLen(upload*content.Bit).MegaBites(),
 		"Spend:", time.Since(start).Seconds())
 
 	download, upload, err = w.DoRequest(context.Background(), speedtest_lib.ProviderKindNetflix)
@@ -34,7 +34,7 @@ func main() {
 		panic(err)
 	}
 	fmt.Println("Netflix",
-		"D", content_len.DataLen(download).MegaBites(),
-		"U", content_len.DataLen(upload).MegaBites(),
+		"D", content.DataLen(download*content.Bit).MegaBites(),
+		"U", content.DataLen(upload*content.Bit).MegaBites(),
 		"Spend:", time.Since(start).Seconds())
 }
