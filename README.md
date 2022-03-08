@@ -9,10 +9,14 @@ Speed test lib provides mechanism for network bandwidth check.
 
 ### How to use
 
+Install library:
+
 ```shell
 go get github.com/goforbroke1006/speedtest-lib
 
 ```
+
+Below sample on small application:
 
 ```go
 package main
