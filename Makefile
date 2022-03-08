@@ -16,9 +16,9 @@ benchmark:
 
 benchcmp:
 	go test -gcflags="-N" -bench=. -benchmem ./... > new.bench.txt
-	git stash
+	@git stash
 	go test -gcflags="-N" -bench=. -benchmem ./... > old.bench.txt
-	git stash pop
+	@git stash pop
 	benchcmp old.bench.txt new.bench.txt
 
 coverage:
