@@ -1,12 +1,10 @@
-package loader
+package speedtest_lib
 
 import (
 	"github.com/ddo/go-fast"
-
-	"github.com/goforbroke1006/speedtest-lib/domain"
 )
 
-func NewNetflixLoader() *netflixLoader {
+func newNetflixLoader() *netflixLoader {
 	fastCom := fast.New()
 	err := fastCom.Init()
 	if err != nil {
@@ -19,7 +17,7 @@ func NewNetflixLoader() *netflixLoader {
 }
 
 var (
-	_ domain.NetworkLoader = &netflixLoader{}
+	_ NetworkLoader = &netflixLoader{}
 )
 
 type netflixLoader struct {

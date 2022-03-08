@@ -1,4 +1,4 @@
-package domain
+package speedtest_lib
 
 // NetworkLoader runs a bunch of request to speed-test servers
 type NetworkLoader interface {
