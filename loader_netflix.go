@@ -58,6 +58,7 @@ func (n netflixLoader) DownloadSink() (<-chan float64, error) {
 }
 
 func (n netflixLoader) UploadSink() (<-chan float64, error) {
+	// TODO: stub because fast.com does not provide upload speed check
 	bitsPerSecondSink := make(chan float64)
 	go func() {
 		bitsPerSecondSink <- 0.0
