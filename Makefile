@@ -15,9 +15,9 @@ benchmark:
 	go test -gcflags="-N" ./... -bench=.
 
 benchcmp:
-	go test -bench=. -benchmem bench_test.go > new.bench.txt
+	go test -gcflags="-N" -bench=. -benchmem ./... > new.bench.txt
 	git stash
-	go test -bench=. -benchmem bench_test.go > old.bench.txt
+	go test -gcflags="-N" -bench=. -benchmem ./... > old.bench.txt
 	git stash pop
 	benchcmp old.bench.txt new.bench.txt
 
