@@ -52,9 +52,18 @@ func main() {
 
 ```
 
+### How to run benchmark tests
+
+Run in terminal:
+
+```shell
+make setup
+make benchmark
+```
+
 ### How to run basic example
 
-In terminal
+Run in terminal:
 
 ```shell
 make setup
